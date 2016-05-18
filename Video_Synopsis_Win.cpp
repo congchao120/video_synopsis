@@ -4,7 +4,7 @@
 #include "stdafx.h"
 #include "Video_Synopsis_Win.h"
 #include "synopsis.h"
-
+#include "bspline.h"
 #include <cv.h>
 #include <highgui.h>
 #include <opencv2/core/core.hpp>
@@ -53,12 +53,14 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 		_tprintf(_T("Fatal Error: GetModuleHandle failed\n"));
 		nRetCode = 1;
 	}
-
-	char file_path[] = "E:\\video_synopsis_data\\192.168.1.96_31¶°Ç°Çò»ú_20150804081124_20150804084125.mp4";
+	
+	char file_path[] = "E:\\video_synopsis_data\\001_M_150908080000_20160106144225.avi";
 	const char file_out_path[] = "E:\\video_synopsis_out\\20150804081124_20150804084125.avi";
 	int fps, frame_number;
 
-	tube_database s_database = buildTrackDB_KNN(file_path);
-	refineDB(s_database);
+	tube_database s_database;
+	//s_database = buildTrackDB_KNN(file_path);
+	refineDB_Mat(s_database);
+	reArrangeDB(s_database, file_path);
 	return 0;
 }

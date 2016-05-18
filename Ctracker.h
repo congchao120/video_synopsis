@@ -16,7 +16,7 @@ public:
 	static size_t NextTrackID;
 	size_t track_id;
 	size_t skipped_frames; 
-	Point2d prediction;
+	Mat prediction;
 	TKalmanFilter* KF;
 	int n_tube_map_index;
 	CTrack(Point2f p, float dt, float Accel_noise_mag, int n_tube_index);

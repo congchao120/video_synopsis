@@ -18,7 +18,7 @@ CTrack::CTrack(Point2f pt, float dt, float Accel_noise_mag, int n_tube_index)
 	// it user for next point position prediction.
 	KF = new TKalmanFilter(pt,dt,Accel_noise_mag);
 	// Here stored points coordinates, used for next position prediction.
-	prediction=pt;
+	prediction=(Mat_<float>(4, 1) << pt.x, pt.y, 0, 0);
 	skipped_frames=0;
 	n_tube_map_index = n_tube_index;
 }
@@ -67,7 +67,9 @@ void CTracker::Update(vector<Point2d>& detections, vector<CvRect>& detect_rects,
 			CTrack* tr=new CTrack(detections[i],dt,Accel_noise_mag, n_tube_index);
 			tracks.push_back(tr);
 			simple_tube s_tube(detect_rects[i], n_frame);
-			(*p_tube_database)[n_tube_index] = tube_seq(list<simple_tube>(1, s_tube), n_frame, n_tube_index);
+			hash_map<int, simple_tube> tubes;
+			tubes[n_frame] = s_tube;
+			(*p_tube_database)[n_tube_index] = tube_seq(tubes, n_frame, n_tube_index);
 			n_tube_index++;
 		}	
 	}
@@ -92,7 +94,8 @@ void CTracker::Update(vector<Point2d>& detections, vector<CvRect>& detect_rects,
 		// cout << prediction << endl;
 		for(int j=0;j<detections.size();j++)
 		{
-			Point2d diff=(tracks[i]->prediction-detections[j]);
+			Point2d predict_point(tracks[i]->prediction.at<float>(0), tracks[i]->prediction.at<float>(1));
+			Point2d diff=(predict_point-detections[j]);
 			dist=sqrtf(diff.x*diff.x+diff.y*diff.y);
 			Cost[i][j]=dist;
 		}
@@ -169,7 +172,9 @@ void CTracker::Update(vector<Point2d>& detections, vector<CvRect>& detect_rects,
 			tracks.push_back(tr);
 
 			simple_tube s_tube(detect_rects[not_assigned_detections[i]], n_frame);
-			(*p_tube_database)[n_tube_index] = tube_seq(list<simple_tube>(1, s_tube), n_frame, n_tube_index);
+			hash_map<int, simple_tube> tubes;
+			tubes[n_frame] = s_tube;
+			(*p_tube_database)[n_tube_index] = tube_seq(tubes, n_frame, n_tube_index);
 			n_tube_index++;
 		}	
 	}
@@ -190,7 +195,7 @@ void CTracker::Update(vector<Point2d>& detections, vector<CvRect>& detect_rects,
 			simple_tube s_tube(detect_rects[assignment[i]], n_frame);
 			int i_tube = tracks[i]->n_tube_map_index;
 
-			(*p_tube_database)[i_tube].tubes.push_back(s_tube);
+			(*p_tube_database)[i_tube].tubes[n_frame] = s_tube;
 			if((*p_tube_database)[i_tube].i_end < n_frame)
 				(*p_tube_database)[i_tube].i_end = n_frame;
 		}else				  // if not continue using predictions
@@ -203,7 +208,7 @@ void CTracker::Update(vector<Point2d>& detections, vector<CvRect>& detect_rects,
 			tracks[i]->trace.erase(tracks[i]->trace.begin(),tracks[i]->trace.end()-max_trace_length);
 		}
 
-		tracks[i]->trace.push_back(tracks[i]->prediction);
+		tracks[i]->trace.push_back(Point2d(tracks[i]->prediction.at<float>(0), tracks[i]->prediction.at<float>(1)));
 		tracks[i]->KF->LastResult=tracks[i]->prediction;
 	}
 

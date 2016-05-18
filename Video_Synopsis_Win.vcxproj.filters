@@ -55,6 +55,9 @@
     <ClInclude Include="synopsis.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="bspline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -79,6 +82,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="video_synopsis.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bspline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

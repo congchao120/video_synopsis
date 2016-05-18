@@ -9,10 +9,10 @@ class TKalmanFilter
 public:
 	KalmanFilter* kalman;
 	double deltatime; 
-	Point2f LastResult;
+	Mat LastResult;
 	TKalmanFilter(Point2f p,float dt=0.2,float Accel_noise_mag=0.5);
 	~TKalmanFilter();
-	Point2f GetPrediction();
-	Point2f Update(Point2f p, bool DataCorrect);
+	Mat GetPrediction();
+	Mat Update(Point2f p, bool DataCorrect);
 };
 

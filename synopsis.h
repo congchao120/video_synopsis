@@ -26,6 +26,7 @@ struct DecAVInfo;
 struct simple_tube {
 	//functions
 	simple_tube(CvRect rect, int f); //构造函数
+	simple_tube(); //构造函数
 	~simple_tube(); //析构函数
 
 			 //variables
@@ -40,11 +41,11 @@ struct simple_tube {
 struct tube_seq {
 	//functions
 	tube_seq(); //构造函数
-	tube_seq(list<simple_tube> _seq, int _iframe, int _index); //构造函数
+	tube_seq(hash_map<int, simple_tube> _seq, int _iframe, int _index); //构造函数
 	~tube_seq(); //析构函数
 
 			 //variables
-	list<simple_tube> tubes; //本序列所有simple_tube
+	hash_map<int, simple_tube> tubes; //本序列所有simple_tube
 	list<int> relate_tube_seq; //相关tube_seq表，相关tube_seq指所有由本序列分裂的、组合的、冲突的tube_seq
 	list<int> neighbour_tube_seq; //空间邻近tube_seq表
 	list<int> later_tube_seq; //时间顺序tube_seq表（只统计之后）
@@ -65,10 +66,11 @@ struct tube_database {
 	~tube_database(); //析构函数
 
 	//variables
-	hash_map<int, tube_seq> tubes;
+	hash_map<int, tube_seq> tube_seqs;
 	int i_width;//图像宽
 	int i_height;//图像高
 	int i_total;//所有（曾经）tubes
+	int i_frame;
 };
 
 
@@ -95,7 +97,18 @@ _DLL_API tube_database buildTrackDB_KNN(char * videoFilePath, \
 *		edges	-	输出边缘
 */
 _DLL_API void detectEdge_KNN(IplImage* frame, Ptr<BackgroundSubtractorKNN>& knn, Mat& edges, \
+	int canny_thres_1 = 1, int canny_thres_2 = 1, int canny_apperture = 5);
+
+
+/**
+*功能：	使用GMM方法与Canny算子实现背景与前景边缘提取
+*参数：	frame	-	输入图像
+*		knn		-	knn算子指针
+*		edges	-	输出边缘
+*/
+_DLL_API void detectEdge_GMM(IplImage* frame, Ptr<BackgroundSubtractorMOG2>& gmm, Mat& edges, \
 	int canny_thres_1 = 20, int canny_thres_2 = 190, int canny_apperture = 3);
+
 
 /**
 *  提炼tube数据库，判断独立tube，相关tubes，邻近tubes，顺序tubes，时间重叠tubes
@@ -110,7 +123,10 @@ _DLL_API void refineDB(tube_database & s_database, \
 		const int thres_min_duration = 30, const int neighbour_thres_distance = 10, const int ts_thres_frame = 150, \
 		const float to_thres_overlap = 0.5);
 
-
+_DLL_API void refineDB_Mat(tube_database& s_database, \
+		const int thres_main_duration = 60, const int relate_thres_distance = 2, const int relate_thres_frame = 2,\
+		const int thres_min_duration = 30, const int neighbour_thres_distance = 10, const int ts_thres_frame = 150, \
+		const float to_thres_overlap = 0.5);
 /**
 *功能：	融合跟踪数据库形成视频摘要
 *参数：	database		-	级联链表数据的引用（输入）
@@ -131,5 +147,15 @@ static void  __cdecl GetDecAVCbk(int _iID, const DecAVInfo *_pDecAVInfo);
 bool isOverlap(const CvRect & a, const CvRect & b);
 
 bool isOverlap(CvRect a, CvRect b, int thres);
+/**
+*两矩形块合并，无视是否相交
+*/
+void mergeRects(CvRect& main_rect, CvRect& sub_rect);
+
+/**
+*Tube seq database重组优化
+*/
+_DLL_API void reArrangeDB(tube_database & s_database, const char * videoFilePath);
+
 
 #endif

@@ -24,7 +24,7 @@ TKalmanFilter::TKalmanFilter(Point2f pt,float dt,float Accel_noise_mag)
 	kalman->transitionMatrix = (Mat_<float>(4, 4) << 1,0,deltatime,0,   0,1,0,deltatime,  0,0,1,0,  0,0,0,1);
 
 	// init... 
-	LastResult = pt;
+	LastResult = (Mat_<float>(4, 1) << pt.x, pt.y, 0, 0);
 	kalman->statePre.at<float>(0) = pt.x; // x
 	kalman->statePre.at<float>(1) = pt.y; // y
 
@@ -57,20 +57,20 @@ TKalmanFilter::~TKalmanFilter()
 }
 
 //---------------------------------------------------------------------------
-Point2f TKalmanFilter::GetPrediction()
+Mat TKalmanFilter::GetPrediction()
 {
 	Mat prediction = kalman->predict();
-	LastResult=Point2f(prediction.at<float>(0),prediction.at<float>(1)); 
-	return LastResult;
+	LastResult=prediction; 
+	return prediction;
 }
 //---------------------------------------------------------------------------
-Point2f TKalmanFilter::Update(Point2f p, bool DataCorrect)
+Mat TKalmanFilter::Update(Point2f p, bool DataCorrect)
 {
 	Mat measurement(2,1,CV_32FC1);
 	if(!DataCorrect)
 	{
-		measurement.at<float>(0) = LastResult.x;  //update using prediction
-		measurement.at<float>(1) = LastResult.y;
+		measurement.at<float>(0) = LastResult.at<float>(0);  //update using prediction
+		measurement.at<float>(1) = LastResult.at<float>(1);
 	}
 	else
 	{
@@ -79,8 +79,7 @@ Point2f TKalmanFilter::Update(Point2f p, bool DataCorrect)
 	}
 	// Correction
 	Mat estimated = kalman->correct(measurement);
-	LastResult.x=estimated.at<float>(0);   //update using measurements
-	LastResult.y=estimated.at<float>(1);
-	return LastResult;
+	LastResult = estimated;   //update using measurements
+	return estimated;
 }
 //---------------------------------------------------------------------------
